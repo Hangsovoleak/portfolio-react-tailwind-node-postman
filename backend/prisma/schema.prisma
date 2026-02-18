@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id      Int      @id @default(autoincrement())
+    email   String   @unique
+    name    String?
+    // Relation to Profile
+    profile Profile?
+    //   posts   Post[] // Keep existing for now if needed, or remove if cleanup desired
+}
+
+model Profile {
+    id        Int     @id @default(autoincrement())
+    bio       String?
+    headline  String?
+    resumeUrl String?
+    user      User    @relation(fields: [userId], references: [id])
+    userId    Int     @unique
+}
+
+model Education {
+    id          Int    @id @default(autoincrement())
+    institution String
+    degree      String
+    period      String @default("") // e.g. "2024 - present"
+    // potentially add description or start/end dates
+    userId      Int
+    // optionally relate to User if multi-user, but for portfolio likely single user or implicit
+}
+
+model Experience {
+    id          Int     @id @default(autoincrement())
+    company     String
+    role        String
+    period      String
+    description String? // Can store as JSON or text or separate model for bullet points
+    logoUrl     String?
+}
+
+model Project {
+    id          Int      @id @default(autoincrement())
+    title       String
+    description String?
+    imageUrl    String?
+    projectUrl  String?
+    tags        String[] // PostgreSQL supports string arrays
+}
+
+model Skill {
+    id       Int     @id @default(autoincrement())
+    name     String
+    iconUrl  String?
+    category String? // e.g., "Frontend", "Backend"
+}
