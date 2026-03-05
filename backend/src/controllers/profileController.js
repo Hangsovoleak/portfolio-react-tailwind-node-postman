@@ -38,7 +38,15 @@ const getProfile = async (req, res) => {
         });
 
         if (!profile) {
-            return res.status(404).json({ error: 'Profile not found' });
+            return res.json({
+                id: null,
+                userId: 1,
+                bio: '',
+                headline: '',
+                resumeUrl: '',
+                name: '',
+                email: '',
+            });
         }
 
         // Flatten the response for frontend convenience
@@ -67,26 +75,35 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     const { name, email, bio, headline, resumeUrl } = req.body;
     try {
-        // Update core User information if provided
-        if (name || email) {
-            await prisma.user.update({
-                where: { id: 1 },
-                data: {
-                    name: name,
-                    email: email
-                }
-            });
-        }
+        // Ensure the primary user exists, then update provided fields.
+        const user = await prisma.user.upsert({
+            where: { id: 1 },
+            update: {
+                ...(name !== undefined ? { name } : {}),
+                ...(email !== undefined ? { email } : {}),
+            },
+            create: {
+                id: 1,
+                name: name ?? '',
+                email: email ?? 'portfolio-owner@example.com',
+            },
+        });
 
         // Upsert Profile information (update if exists, create if not)
         const profile = await prisma.profile.upsert({
             where: { userId: 1 },
-            update: { bio, headline, resumeUrl },
-            create: { userId: 1, bio, headline, resumeUrl }
+            update: {
+                ...(bio !== undefined ? { bio } : {}),
+                ...(headline !== undefined ? { headline } : {}),
+                ...(resumeUrl !== undefined ? { resumeUrl } : {}),
+            },
+            create: {
+                userId: 1,
+                bio: bio ?? '',
+                headline: headline ?? '',
+                resumeUrl: resumeUrl ?? '',
+            }
         });
-
-        // Retrieve the final state to ensure data consistency
-        const user = await prisma.user.findUnique({ where: { id: 1 } });
 
         res.json({
             ...profile,
