@@ -1,9 +1,9 @@
-const path = require("path");
+import cors from "cors";
 
-module.exports = {
-  webpack: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
-  },
-};
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://69a94259de5781fc1326a9fa--voleak-portfolio.netlify.app"
+  ],
+}));
