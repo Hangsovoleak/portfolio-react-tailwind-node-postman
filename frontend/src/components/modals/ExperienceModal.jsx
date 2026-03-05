@@ -5,9 +5,9 @@ export default function ExperienceModal({ open, onClose, initialData, onSave }) 
     const [draft, setDraft] = useState({
         company: "",
         role: "",
-        time: "",
-        certificateUrl: "",
-        bullets: "",
+        period: "",
+        logoUrl: "",
+        description: "",
     });
 
     useEffect(() => {
@@ -16,19 +16,17 @@ export default function ExperienceModal({ open, onClose, initialData, onSave }) 
                 setDraft({
                     company: initialData.company || "",
                     role: initialData.role || "",
-                    time: initialData.time || "",
-                    certificateUrl: initialData.certificate || initialData.certificateUrl || "",
-                    bullets: Array.isArray(initialData.bullets)
-                        ? initialData.bullets.join("\n")
-                        : initialData.bullets || "",
+                    period: initialData.period || "",
+                    logoUrl: initialData.logoUrl || "",
+                    description: initialData.description || "",
                 });
             } else {
                 setDraft({
                     company: "",
                     role: "",
-                    time: "",
-                    certificateUrl: "",
-                    bullets: "",
+                    period: "",
+                    logoUrl: "",
+                    description: "",
                 });
             }
         }
@@ -48,7 +46,7 @@ export default function ExperienceModal({ open, onClose, initialData, onSave }) 
             <form className="grid gap-3" onSubmit={handleSubmit}>
                 <input
                     className="rounded-lg border border-slate-300 px-3 py-2"
-                    placeholder="Company"
+                    placeholder="Company..."
                     value={draft.company}
                     onChange={(e) =>
                         setDraft({ ...draft, company: e.target.value })
@@ -57,7 +55,7 @@ export default function ExperienceModal({ open, onClose, initialData, onSave }) 
                 />
                 <input
                     className="rounded-lg border border-slate-300 px-3 py-2"
-                    placeholder="Role"
+                    placeholder="Role..."
                     value={draft.role}
                     onChange={(e) =>
                         setDraft({ ...draft, role: e.target.value })
@@ -66,27 +64,27 @@ export default function ExperienceModal({ open, onClose, initialData, onSave }) 
                 />
                 <input
                     className="rounded-lg border border-slate-300 px-3 py-2"
-                    placeholder="Time (e.g. May - Aug 2025)"
-                    value={draft.time}
+                    placeholder="Time..."
+                    value={draft.period}
                     onChange={(e) =>
-                        setDraft({ ...draft, time: e.target.value })
+                        setDraft({ ...draft, period: e.target.value })
                     }
                     required
                 />
                 <input
                     className="rounded-lg border border-slate-300 px-3 py-2"
-                    placeholder="Certificate URL (optional)"
-                    value={draft.certificateUrl}
+                    placeholder="Certificate URL..."
+                    value={draft.logoUrl}
                     onChange={(e) =>
-                        setDraft({ ...draft, certificateUrl: e.target.value })
+                        setDraft({ ...draft, logoUrl: e.target.value })
                     }
                 />
                 <textarea
                     className="min-h-[120px] rounded-lg border border-slate-300 px-3 py-2"
-                    placeholder="Bullets (one per line)"
-                    value={draft.bullets}
+                    placeholder="Description (press <enter> for list)"
+                    value={draft.description}
                     onChange={(e) =>
-                        setDraft({ ...draft, bullets: e.target.value })
+                        setDraft({ ...draft, description: e.target.value })
                     }
                 />
 

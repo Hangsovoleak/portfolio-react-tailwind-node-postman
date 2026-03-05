@@ -51,9 +51,9 @@
 //                             </a>
 //                         </div>
 //                     </div>
-                    // <div className="flex items-center justify-center">
-                    //     <img src="/images/profile.jpg" alt="Profile" className="h-80 w-80 rounded-full object-cover" />
-                    // </div>
+//                     <div className="flex items-center justify-center">
+//                         <img src="/images/profile.jpg" alt="Profile" className="h-80 w-80 rounded-full object-cover" />
+//                     </div>
 
 //                 </div>
                 
@@ -297,17 +297,17 @@
 //                         hangsovoleakrorn@gmail.com
 //                     </a>
 
-                    // <div className="mt-10 flex items-center justify-center gap-4">
-                    //     <a className="grid h-12 w-12 place-items-center rounded-full" href="hagnsovoleakrorn@gmail.com" aria-label="Email">
-                    //         <img src="https://cdn-icons-png.flaticon.com/512/11679/11679732.png" alt="Email" className="h-9 w-9"/>
-                    //     </a>
-                    //     <a className="grid h-12 w-12 place-items-center rounded-full" href="https://github.com/Hangsovoleak" aria-label="GitHub">
-                    //         <img src="https://cdn-icons-png.flaticon.com/256/25/25231.png" alt="GitHub" className="h-9 w-9"/>
-                    //     </a>
-                    //     <a className="grid h-12 w-12 place-items-center rounded-full" href="https://www.linkedin.com/in/hangsovoleak" aria-label="LinkedIn">
-                    //         <img src="https://cdn-icons-png.flaticon.com/512/4138/4138130.png" alt="LinkedIn" className="h-10 w-10"/>
-                    //     </a>
-                    // </div>
+//                     <div className="mt-10 flex items-center justify-center gap-4">
+//                         <a className="grid h-12 w-12 place-items-center rounded-full" href="hagnsovoleakrorn@gmail.com" aria-label="Email">
+//                             <img src="https://cdn-icons-png.flaticon.com/512/11679/11679732.png" alt="Email" className="h-9 w-9"/>
+//                         </a>
+//                         <a className="grid h-12 w-12 place-items-center rounded-full" href="https://github.com/Hangsovoleak" aria-label="GitHub">
+//                             <img src="https://cdn-icons-png.flaticon.com/256/25/25231.png" alt="GitHub" className="h-9 w-9"/>
+//                         </a>
+//                         <a className="grid h-12 w-12 place-items-center rounded-full" href="https://www.linkedin.com/in/hangsovoleak" aria-label="LinkedIn">
+//                             <img src="https://cdn-icons-png.flaticon.com/512/4138/4138130.png" alt="LinkedIn" className="h-10 w-10"/>
+//                         </a>
+//                     </div>
 
 //                     <div className="mt-14 h-px w-full"></div>
 

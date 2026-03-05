@@ -1,10 +1,23 @@
+/**
+ * Description:
+ *      Administrative dashboard for managing portfolio content.
+ *      Provides CRUD interfaces for all portfolio entities.
+ */
+
+/*------------------------------------------------------------------------------
+                                   IMPORTS
+------------------------------------------------------------------------------*/
 import { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
+
+// Modals
 import ProfileModal from "../components/modals/ProfileModal";
 import EducationModal from "../components/modals/EducationModal";
 import ExperienceModal from "../components/modals/ExperienceModal";
 import ProjectModal from "../components/modals/ProjectModal";
 import SkillModal from "../components/modals/SkillModal";
+
+// Icons
 import {
     User,
     GraduationCap,
@@ -16,6 +29,7 @@ import {
     Trash2,
 } from "lucide-react";
 
+// Services
 import { updateProfile } from "../services/profile";
 import {
     createEducation,
@@ -38,8 +52,14 @@ import {
     updateSkill,
 } from "../services/skills";
 import { fetchPortfolioData } from "../services/portfolioService";
-import { toExperienceApiPayload, toExperienceViewModel } from "../mappers/experienceMapper";
 
+/*------------------------------------------------------------------------------
+                               SUB-COMPONENTS
+------------------------------------------------------------------------------*/
+
+/**
+ * @brief Reusable button for dashboard actions.
+ */
 function ActionButton({ label, tone = "neutral", icon, onClick }) {
     const toneClass = {
         create: "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
@@ -60,6 +80,9 @@ function ActionButton({ label, tone = "neutral", icon, onClick }) {
     );
 }
 
+/**
+ * @brief Styled wrapper for administrative sections.
+ */
 function AdminSection({ title, icon, count, onCreate, items, renderRow }) {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur">
@@ -98,32 +121,52 @@ function AdminSection({ title, icon, count, onCreate, items, renderRow }) {
     );
 }
 
+/*------------------------------------------------------------------------------
+                            MAIN COMPONENT DEFINITION
+------------------------------------------------------------------------------*/
+
+/**
+ * @brief Comprehensive management interface for the portfolio content.
+ * 
+ * @returns {JSX.Element} The rendered dashboard.
+ */
 function Dashboard() {
+    // Data State
     const [profile, setProfile] = useState(null);
     const [education, setEducation] = useState([]);
     const [experience, setExperience] = useState([]);
     const [projects, setProjects] = useState([]);
     const [skills, setSkills] = useState([]);
 
-    const [loading, setLoading] = useState(true);
-    const [err, setErr] = useState("");
+    // UI / UX State
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
 
-    const [showProfileModal, setShowProfileModal] = useState(false);
-    const [showEducationModal, setShowEducationModal] = useState(false);
-    const [showExperienceModal, setShowExperienceModal] = useState(false);
-    const [showProjectModal, setShowProjectModal] = useState(false);
-    const [showSkillModal, setShowSkillModal] = useState(false);
+    // Modal Control State
+    const [activeModals, setActiveModals] = useState({
+        profile: false,
+        education: false,
+        experience: false,
+        project: false,
+        skill: false,
+    });
 
-    const [editingEducation, setEditingEducation] = useState(null);
-    const [editingExperience, setEditingExperience] = useState(null);
-    const [editingProject, setEditingProject] = useState(null);
-    const [editingSkill, setEditingSkill] = useState(null);
+    // Object Editing State
+    const [editingState, setEditingState] = useState({
+        education: null,
+        experience: null,
+        project: null,
+        skill: null,
+    });
 
+    /**
+     * @brief Loads initial data for the dashboard.
+     */
     useEffect(() => {
         async function loadDashboard() {
             try {
-                setLoading(true);
-                setErr("");
+                setIsLoading(true);
+                setErrorMessage("");
 
                 const portfolioData = await fetchPortfolioData();
 
@@ -133,331 +176,292 @@ function Dashboard() {
                 setProjects(portfolioData.projects);
                 setSkills(portfolioData.skills);
             } catch (error) {
-                setErr("Failed to load dashboard data. Make sure the backend is running.");
+                console.error("Dashboard Load Error:", error);
+                setErrorMessage("Failed to load dashboard data. Ensure backend is reachable.");
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         }
 
         loadDashboard();
     }, []);
 
-    async function handleSaveProfile(data) {
+    /*--------------------------------------------------------------------------
+                                ACTION HANDLERS
+    --------------------------------------------------------------------------*/
+
+    /**
+     * @brief Persists profile updates.
+     */
+    const handleSaveProfile = async (data) => {
         const res = await updateProfile(data);
         setProfile(res.data);
-        setShowProfileModal(false);
-    }
+        setActiveModals(prev => ({ ...prev, profile: false }));
+    };
 
-    async function handleSaveEducation(data) {
+    /**
+     * @brief Persists education create/update.
+     */
+    const handleSaveEducation = async (data) => {
         const payload = {
             institution: data.institution.trim(),
             degree: data.degree.trim(),
             period: data.period.trim(),
         };
 
-        if (editingEducation) {
-            const res = await updateEducation(editingEducation.id, payload);
-            setEducation((prev) =>
-                prev.map((x) => (x.id === editingEducation.id ? res.data : x))
-            );
+        if (editingState.education) {
+            const res = await updateEducation(editingState.education.id, payload);
+            setEducation(prev => prev.map(x => x.id === editingState.education.id ? res.data : x));
         } else {
             const res = await createEducation(payload);
-            setEducation((prev) => [...prev, res.data]);
+            setEducation(prev => [...prev, res.data]);
         }
-        setEditingEducation(null);
-        setShowEducationModal(false);
-    }
+        setEditingState(prev => ({ ...prev, education: null }));
+        setActiveModals(prev => ({ ...prev, education: false }));
+    };
 
-    async function handleSaveExperience(data) {
-        const payload = toExperienceApiPayload(data);
+    /**
+     * @brief Persists experience create/update.
+     */
+    const handleSaveExperience = async (data) => {
+        const payload = {
+            company: String(data.company || "").trim(),
+            role: String(data.role || "").trim(),
+            period: String(data.period || "").trim(),
+            description: String(data.description || "")
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .join("\n"),
+            logoUrl: String(data.logoUrl || "").trim() || null,
+        };
 
-        if (editingExperience) {
-            const res = await updateExperience(editingExperience.id, payload);
-            setExperience((prev) =>
-                prev.map((x) => (x.id === editingExperience.id ? toExperienceViewModel(res.data) : x))
-            );
+        if (editingState.experience) {
+            const res = await updateExperience(editingState.experience.id, payload);
+            setExperience(prev => prev.map(x => x.id === editingState.experience.id ? res.data : x));
         } else {
             const res = await createExperience(payload);
-            setExperience((prev) => [...prev, toExperienceViewModel(res.data)]);
+            setExperience(prev => [...prev, res.data]);
         }
-        setEditingExperience(null);
-        setShowExperienceModal(false);
-    }
 
-    async function handleSaveProject(data) {
+        setEditingState(prev => ({ ...prev, experience: null }));
+        setActiveModals(prev => ({ ...prev, experience: false }));
+    };
+
+    /**
+     * @brief Persists project create/update.
+     */
+    const handleSaveProject = async (data) => {
         const payload = {
             title: data.title.trim(),
             description: data.description.trim(),
             imageUrl: data.imageUrl.trim() || null,
             projectUrl: data.projectUrl.trim() || null,
-            tags: data.tags
-                .split(",")
-                .map((t) => t.trim())
-                .filter(Boolean),
+            tags: data.tags.split(",").map(t => t.trim()).filter(Boolean),
         };
 
-        if (editingProject) {
-            const res = await updateProject(editingProject.id, payload);
-            setProjects((prev) =>
-                prev.map((x) => (x.id === editingProject.id ? res.data : x))
-            );
+        if (editingState.project) {
+            const res = await updateProject(editingState.project.id, payload);
+            setProjects(prev => prev.map(x => x.id === editingState.project.id ? res.data : x));
         } else {
             const res = await createProject(payload);
-            setProjects((prev) => [...prev, res.data]);
+            setProjects(prev => [...prev, res.data]);
         }
-        setEditingProject(null);
-        setShowProjectModal(false);
-    }
+        setEditingState(prev => ({ ...prev, project: null }));
+        setActiveModals(prev => ({ ...prev, project: false }));
+    };
 
-    async function handleSaveSkill(data) {
+    /**
+     * @brief Persists skill create/update.
+     */
+    const handleSaveSkill = async (data) => {
         const payload = {
             name: data.name.trim(),
             iconUrl: data.iconUrl.trim() || null,
         };
 
-        if (editingSkill) {
-            const res = await updateSkill(editingSkill.id, payload);
-            setSkills((prev) =>
-                prev.map((x) => (x.id === editingSkill.id ? res.data : x))
-            );
+        if (editingState.skill) {
+            const res = await updateSkill(editingState.skill.id, payload);
+            setSkills(prev => prev.map(x => x.id === editingState.skill.id ? res.data : x));
         } else {
             const res = await createSkill(payload);
-            setSkills((prev) => [...prev, res.data]);
+            setSkills(prev => [...prev, res.data]);
         }
-        setEditingSkill(null);
-        setShowSkillModal(false);
-    }
+        setEditingState(prev => ({ ...prev, skill: null }));
+        setActiveModals(prev => ({ ...prev, skill: false }));
+    };
 
-    async function handleDeleteEducation(id) {
-        if (!window.confirm("Delete this education record?")) return;
+    /*--------------------------------------------------------------------------
+                                DELETION HANDLERS
+    --------------------------------------------------------------------------*/
+
+    const handleDeleteEducation = async (id) => {
+        if (!window.confirm("Jhg Delete education ng?")) return;
         await deleteEducation(id);
-        setEducation((prev) => prev.filter((x) => x.id !== id));
-    }
+        setEducation(prev => prev.filter(x => x.id !== id));
+    };
 
-    async function handleDeleteExperience(id) {
-        if (!window.confirm("Delete this experience record?")) return;
+    const handleDeleteExperience = async (id) => {
+        if (!window.confirm("Jhg Delete Experience ng?")) return;
         await deleteExperience(id);
-        setExperience((prev) => prev.filter((x) => x.id !== id));
-    }
+        setExperience(prev => prev.filter(x => x.id !== id));
+    };
 
-    async function handleDeleteProject(id) {
-        if (!window.confirm("Delete this project?")) return;
+    const handleDeleteProject = async (id) => {
+        if (!window.confirm("Jhg Delete Project ng men?")) return;
         await deleteProject(id);
-        setProjects((prev) => prev.filter((x) => x.id !== id));
-    }
+        setProjects(prev => prev.filter(x => x.id !== id));
+    };
 
-    async function handleDeleteSkill(id) {
-        if (!window.confirm("Delete this skill?")) return;
+    const handleDeleteSkill = async (id) => {
+        if (!window.confirm("Jhg Delete Skill ng men?")) return;
         await deleteSkill(id);
-        setSkills((prev) => prev.filter((x) => x.id !== id));
-    }
+        setSkills(prev => prev.filter(x => x.id !== id));
+    };
 
+    // Stats Calculation
     const totalRecords = useMemo(
         () => education.length + experience.length + projects.length + skills.length,
         [education.length, experience.length, projects.length, skills.length]
     );
 
-    if (loading) {
-        return <div className="grid min-h-screen place-items-center bg-slate-100 font-mono">Loading dashboard...</div>;
+    /*--------------------------------------------------------------------------
+                                RENDER LOGIC
+    --------------------------------------------------------------------------*/
+
+    if (isLoading) {
+        return <div className="grid min-h-screen place-items-center bg-slate-100 font-mono">Initializing Dashboard Control...</div>;
     }
 
-    if (err) {
-        return <div className="grid min-h-screen place-items-center bg-slate-100 p-6 text-red-600">{err}</div>;
+    if (errorMessage) {
+        return <div className="grid min-h-screen place-items-center bg-slate-100 p-6 text-red-600 font-mono text-center">{errorMessage}</div>;
     }
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe_0%,_#f8fafc_35%,_#eef2ff_100%)] font-mono">
-            <Header
-                links={[
-                    { id: "home", label: "View Site", href: "/" },
-                ]}
-            />
+        <div className="min-h-screen font-mono">
+            {/* Header Navigation */}
+            <Header links={[{ id: "home", label: "View Site", href: "/" }]} />
 
             <main className="mx-auto max-w-6xl px-4 pb-10 pt-24 sm:px-6 sm:pt-28">
+
+                {/* Dashboard Summary Bar */}
                 <section className="mb-6 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                                Dashboard API Control Panel
-                            </h1>
-                            <p className="mt-1 text-sm font-semibold text-slate-600">
-                                Manage portfolio data with explicit actions: POST, PUT, DELETE.
-                            </p>
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Control Panel</h1>
                         </div>
 
                         <div className="grid min-w-[220px] grid-cols-2 gap-2 text-xs font-bold uppercase tracking-wide">
-                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
-                                Total Records: {totalRecords}
-                            </div>
-                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
-                                Sections: 5
-                            </div>
-                            <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-800">
-                                POST: Create
-                            </div>
-                            <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sky-800">
-                                PUT: Update
-                            </div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">Total: {totalRecords}</div>
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">Sections: 5</div>
+                            <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-800">POST: Create</div>
+                            <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sky-800">PUT: Update</div>
                         </div>
                     </div>
                 </section>
 
+                {/* Section Management Grid */}
                 <div className="space-y-5">
+
+                    {/* Profile Section */}
                     <section className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur">
                         <div className="mb-4 flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700">
-                                    <User size={18} />
-                                </div>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700"><User size={18} /></div>
                                 <h2 className="text-lg font-black text-slate-900">Profile</h2>
                             </div>
                             <ActionButton
                                 label="PUT"
                                 tone="update"
                                 icon={<Pencil size={14} />}
-                                onClick={() => setShowProfileModal(true)}
+                                onClick={() => setActiveModals(p => ({ ...p, profile: true }))}
                             />
                         </div>
                         <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700 sm:grid-cols-2">
                             <div><span className="font-bold">Name:</span> {profile?.name || "-"}</div>
-                            <div><span className="font-bold">Email:</span> {profile?.email || "-"}</div>
                             <div className="sm:col-span-2"><span className="font-bold">Bio:</span> {profile?.bio || "-"}</div>
                         </div>
                     </section>
 
+                    {/* Education Section */}
                     <AdminSection
                         title="Education"
                         icon={<GraduationCap size={18} />}
                         count={education.length}
                         onCreate={() => {
-                            setEditingEducation(null);
-                            setShowEducationModal(true);
+                            setEditingState(p => ({ ...p, education: null }));
+                            setActiveModals(p => ({ ...p, education: true }));
                         }}
                         items={education}
-                        renderRow={(e) => (
-                            <div key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <div className="text-sm font-semibold text-slate-700">
-                                    {e.institution} | {e.degree} | {e.period}
-                                </div>
+                        renderRow={(entry) => (
+                            <div key={entry.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <div className="text-sm font-semibold text-slate-700">{entry.institution} | {entry.degree}</div>
                                 <div className="flex gap-2">
-                                    <ActionButton
-                                        label="PUT"
-                                        tone="update"
-                                        icon={<Pencil size={14} />}
-                                        onClick={() => {
-                                            setEditingEducation(e);
-                                            setShowEducationModal(true);
-                                        }}
-                                    />
-                                    <ActionButton
-                                        label="DELETE"
-                                        tone="delete"
-                                        icon={<Trash2 size={14} />}
-                                        onClick={() => handleDeleteEducation(e.id)}
-                                    />
+                                    <ActionButton label="PUT" tone="update" icon={<Pencil size={14} />} onClick={() => { setEditingState(p => ({ ...p, education: entry })); setActiveModals(p => ({ ...p, education: true })); }} />
+                                    <ActionButton label="DELETE" tone="delete" icon={<Trash2 size={14} />} onClick={() => handleDeleteEducation(entry.id)} />
                                 </div>
                             </div>
                         )}
                     />
 
+                    {/* Experience Section */}
                     <AdminSection
                         title="Experience"
                         icon={<Briefcase size={18} />}
                         count={experience.length}
                         onCreate={() => {
-                            setEditingExperience(null);
-                            setShowExperienceModal(true);
+                            setEditingState(p => ({ ...p, experience: null }));
+                            setActiveModals(p => ({ ...p, experience: true }));
                         }}
                         items={experience}
                         renderRow={(x) => (
                             <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <div className="text-sm font-semibold text-slate-700">
-                                    {x.company} | {x.role} | {x.time}
-                                </div>
+                                <div className="text-sm font-semibold text-slate-700">{x.company} | {x.role}</div>
                                 <div className="flex gap-2">
-                                    <ActionButton
-                                        label="PUT"
-                                        tone="update"
-                                        icon={<Pencil size={14} />}
-                                        onClick={() => {
-                                            setEditingExperience(x);
-                                            setShowExperienceModal(true);
-                                        }}
-                                    />
-                                    <ActionButton
-                                        label="DELETE"
-                                        tone="delete"
-                                        icon={<Trash2 size={14} />}
-                                        onClick={() => handleDeleteExperience(x.id)}
-                                    />
+                                    <ActionButton label="PUT" tone="update" icon={<Pencil size={14} />} onClick={() => { setEditingState(p => ({ ...p, experience: x })); setActiveModals(p => ({ ...p, experience: true })); }} />
+                                    <ActionButton label="DELETE" tone="delete" icon={<Trash2 size={14} />} onClick={() => handleDeleteExperience(x.id)} />
                                 </div>
                             </div>
                         )}
                     />
 
+                    {/* Projects Section */}
                     <AdminSection
                         title="Projects"
                         icon={<FolderKanban size={18} />}
                         count={projects.length}
                         onCreate={() => {
-                            setEditingProject(null);
-                            setShowProjectModal(true);
+                            setEditingState(p => ({ ...p, project: null }));
+                            setActiveModals(p => ({ ...p, project: true }));
                         }}
                         items={projects}
-                        renderRow={(p) => (
-                            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <div className="text-sm font-semibold text-slate-700">
-                                    {p.title}
-                                </div>
+                        renderRow={(project) => (
+                            <div key={project.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <div className="text-sm font-semibold text-slate-700">{project.title}</div>
                                 <div className="flex gap-2">
-                                    <ActionButton
-                                        label="PUT"
-                                        tone="update"
-                                        icon={<Pencil size={14} />}
-                                        onClick={() => {
-                                            setEditingProject(p);
-                                            setShowProjectModal(true);
-                                        }}
-                                    />
-                                    <ActionButton
-                                        label="DELETE"
-                                        tone="delete"
-                                        icon={<Trash2 size={14} />}
-                                        onClick={() => handleDeleteProject(p.id)}
-                                    />
+                                    <ActionButton label="PUT" tone="update" icon={<Pencil size={14} />} onClick={() => { setEditingState(p => ({ ...p, project: project })); setActiveModals(p => ({ ...p, project: true })); }} />
+                                    <ActionButton label="DELETE" tone="delete" icon={<Trash2 size={14} />} onClick={() => handleDeleteProject(project.id)} />
                                 </div>
                             </div>
                         )}
                     />
 
+                    {/* Skills Section */}
                     <AdminSection
                         title="Skills"
                         icon={<Wrench size={18} />}
                         count={skills.length}
                         onCreate={() => {
-                            setEditingSkill(null);
-                            setShowSkillModal(true);
+                            setEditingState(p => ({ ...p, skill: null }));
+                            setActiveModals(p => ({ ...p, skill: true }));
                         }}
                         items={skills}
-                        renderRow={(s) => (
-                            <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <div className="text-sm font-semibold text-slate-700">{s.name}</div>
+                        renderRow={(skill) => (
+                            <div key={skill.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <div className="text-sm font-semibold text-slate-700">{skill.name}</div>
                                 <div className="flex gap-2">
-                                    <ActionButton
-                                        label="PUT"
-                                        tone="update"
-                                        icon={<Pencil size={14} />}
-                                        onClick={() => {
-                                            setEditingSkill(s);
-                                            setShowSkillModal(true);
-                                        }}
-                                    />
-                                    <ActionButton
-                                        label="DELETE"
-                                        tone="delete"
-                                        icon={<Trash2 size={14} />}
-                                        onClick={() => handleDeleteSkill(s.id)}
-                                    />
+                                    <ActionButton label="PUT" tone="update" icon={<Pencil size={14} />} onClick={() => { setEditingState(p => ({ ...p, skill: skill })); setActiveModals(p => ({ ...p, skill: true })); }} />
+                                    <ActionButton label="DELETE" tone="delete" icon={<Trash2 size={14} />} onClick={() => handleDeleteSkill(skill.id)} />
                                 </div>
                             </div>
                         )}
@@ -465,50 +469,42 @@ function Dashboard() {
                 </div>
             </main>
 
+            {/* Application Modals */}
             <ProfileModal
-                open={showProfileModal}
-                onClose={() => setShowProfileModal(false)}
+                open={activeModals.profile}
+                onClose={() => setActiveModals(p => ({ ...p, profile: false }))}
                 initialData={profile}
                 onSave={handleSaveProfile}
             />
             <EducationModal
-                open={showEducationModal}
-                onClose={() => {
-                    setShowEducationModal(false);
-                    setEditingEducation(null);
-                }}
-                initialData={editingEducation}
+                open={activeModals.education}
+                onClose={() => { setActiveModals(p => ({ ...p, education: false })); setEditingState(p => ({ ...p, education: null })); }}
+                initialData={editingState.education}
                 onSave={handleSaveEducation}
             />
             <ExperienceModal
-                open={showExperienceModal}
-                onClose={() => {
-                    setShowExperienceModal(false);
-                    setEditingExperience(null);
-                }}
-                initialData={editingExperience}
+                open={activeModals.experience}
+                onClose={() => { setActiveModals(p => ({ ...p, experience: false })); setEditingState(p => ({ ...p, experience: null })); }}
+                initialData={editingState.experience}
                 onSave={handleSaveExperience}
             />
             <ProjectModal
-                open={showProjectModal}
-                onClose={() => {
-                    setShowProjectModal(false);
-                    setEditingProject(null);
-                }}
-                initialData={editingProject}
+                open={activeModals.project}
+                onClose={() => { setActiveModals(p => ({ ...p, project: false })); setEditingState(p => ({ ...p, project: null })); }}
+                initialData={editingState.project}
                 onSave={handleSaveProject}
             />
             <SkillModal
-                open={showSkillModal}
-                onClose={() => {
-                    setShowSkillModal(false);
-                    setEditingSkill(null);
-                }}
-                initialData={editingSkill}
+                open={activeModals.skill}
+                onClose={() => { setActiveModals(p => ({ ...p, skill: false })); setEditingState(p => ({ ...p, skill: null })); }}
+                initialData={editingState.skill}
                 onSave={handleSaveSkill}
             />
         </div>
     );
 }
 
+/*------------------------------------------------------------------------------
+                                   EXPORTS
+------------------------------------------------------------------------------*/
 export default Dashboard;

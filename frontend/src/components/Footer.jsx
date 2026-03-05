@@ -1,10 +1,30 @@
+/**
+ * Description:
+ *      Application footer component containing contact information and social links.
+ */
+
+/*------------------------------------------------------------------------------
+                                   IMPORTS
+------------------------------------------------------------------------------*/
 import { Contact, Github, Linkedin, Mailbox } from "lucide-react";
 
+/*------------------------------------------------------------------------------
+                            MAIN COMPONENT DEFINITION
+------------------------------------------------------------------------------*/
+
+/**
+ * @brief Application footer with contact details.
+ * 
+ * @param {string} email Primary contact email address.
+ * @returns {JSX.Element} The rendered footer component.
+ */
 function Footer({ email }) {
     return (
         <footer id="contact" className="bg-slate-950 text-white">
             <div className="portfolio-animate mx-auto max-w-6xl px-6 py-20">
                 <div className="mx-auto max-w-3xl text-center">
+
+                    {/* Section Badge */}
                     <div className="inline-flex items-center gap-2 rounded-full border border-yellow-300/40 bg-yellow-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-yellow-100">
                         <Contact size={14} />
                         Contact
@@ -15,6 +35,7 @@ function Footer({ email }) {
                         I am open to internships, collaboration, and engineering opportunities. Reach out if you want to build practical products together.
                     </p>
 
+                    {/* Email Display */}
                     {email && (
                         <a
                             href={`mailto:${email}`}
@@ -24,6 +45,7 @@ function Footer({ email }) {
                         </a>
                     )}
 
+                    {/* Social Icons */}
                     <div className="mt-10 flex items-center justify-center gap-3">
                         <a
                             className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/5 hover:bg-white/15"
@@ -52,6 +74,7 @@ function Footer({ email }) {
                         </a>
                     </div>
 
+                    {/* Copyright/Branding Footer */}
                     <div className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
                         Rorn Hangsovoleak | Portfolio
                     </div>
@@ -61,4 +84,7 @@ function Footer({ email }) {
     );
 }
 
+/*------------------------------------------------------------------------------
+                                   EXPORTS
+------------------------------------------------------------------------------*/
 export default Footer;

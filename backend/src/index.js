@@ -1,36 +1,65 @@
+/**
+ * Technology: Node.js, Express, Prisma
+ * Description:
+ *      The main entry point for the backend server.
+ *      Initializes middleware, registers routes, and starts the Express server.
+ */
+
+/*------------------------------------------------------------------------------
+                                   IMPORTS
+------------------------------------------------------------------------------*/
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes
-app.get('/', (req, res) => {
-    res.send('Hello from the backend!');
-});
-
-// Import Routes
+// Import Route Handlers
 const educationRouters = require('./routes/educationRoutes');
 const experienceRouters = require('./routes/experienceRoutes');
 const profileRouters = require('./routes/profileRoutes');
 const projectRouters = require('./routes/projectRoutes');
 const skillRouters = require('./routes/skillRoutes');
 
-//Register new API routes
+/*------------------------------------------------------------------------------
+                                PROGRAM CONSTANTS
+------------------------------------------------------------------------------*/
+// Load environment variables from .env file
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+/*------------------------------------------------------------------------------
+                                  MIDDLEWARE
+------------------------------------------------------------------------------*/
+// Enable Cross-Origin Resource Sharing
+app.use(cors());
+
+// Parse incoming JSON requests
+app.use(express.json());
+
+/*------------------------------------------------------------------------------
+                                    ROUTES
+------------------------------------------------------------------------------*/
+/**
+ * @brief Base root route.
+ */
+// app.get('/', (req, res) => {
+//     res.send('Hello from the backend!');
+// });
+
+// Register API Resource Routes
 app.use('/api/education', educationRouters);
 app.use('/api/experience', experienceRouters);
 app.use('/api/profile', profileRouters);
 app.use('/api/project', projectRouters);
 app.use('/api/skill', skillRouters);
 
-// Start Server
+/*------------------------------------------------------------------------------
+                                SERVER EXECUTION
+------------------------------------------------------------------------------*/
+/**
+ * @brief Initialize and start the Express server.
+ */
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

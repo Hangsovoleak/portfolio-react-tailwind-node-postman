@@ -1,5 +1,13 @@
-import { useEffect, useState } from "react";
+/**
+ * Description:
+ *      Primary public-facing portfolio page.
+ *      Orchestrates the loading of all portfolio data and renders the various sections.
+ */
 
+/*------------------------------------------------------------------------------
+                                   IMPORTS
+------------------------------------------------------------------------------*/
+import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AboutSection from "../components/AboutSection";
@@ -11,7 +19,10 @@ import SkillsSection from "../components/SkillsSection";
 import { House, GraduationCap, Flame, FolderGit2, Sparkles, Contact } from "lucide-react";
 import { fetchPortfolioData } from "../services/portfolioService";
 
-const navLink = [
+/*------------------------------------------------------------------------------
+                                PROGRAM CONSTANTS
+------------------------------------------------------------------------------*/
+const NAVIGATION_LINKS = [
     { id: "about", label: <House color="#0284c7" size={18} /> },
     { id: "education", label: <GraduationCap color="#0284c7" size={18} /> },
     { id: "experience", label: <Flame color="#f97316" size={18} /> },
@@ -20,21 +31,35 @@ const navLink = [
     { id: "contact", label: <Contact color="#eab308" size={18} /> },
 ];
 
+/*------------------------------------------------------------------------------
+                            MAIN COMPONENT DEFINITION
+------------------------------------------------------------------------------*/
+
+/**
+ * @brief Main Portfolio application page.
+ * 
+ * @returns {JSX.Element} The rendered portfolio page.
+ */
 function Portfolio() {
+    // State management for portfolio data
     const [profile, setProfile] = useState(null);
     const [education, setEducation] = useState([]);
     const [experience, setExperience] = useState([]);
     const [projects, setProjects] = useState([]);
     const [skills, setSkills] = useState([]);
 
-    const [loading, setLoading] = useState(true);
-    const [err, setErr] = useState("");
+    // UI State
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
 
+    /**
+     * @brief Loads all portfolio data from the backend services.
+     */
     useEffect(() => {
         async function loadPortfolio() {
             try {
-                setLoading(true);
-                setErr("");
+                setIsLoading(true);
+                setErrorMessage("");
 
                 const portfolioData = await fetchPortfolioData();
 
@@ -44,30 +69,45 @@ function Portfolio() {
                 setProjects(portfolioData.projects);
                 setSkills(portfolioData.skills);
             } catch (error) {
-                setErr("Failed to load data. Check backend URL and API endpoint.");
+                console.error("Portfolio Data Fetch Error:", error);
+                setErrorMessage("Failed to load portfolio data. Please ensure the backend is reachable.");
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         }
 
         loadPortfolio();
     }, []);
 
-    if (loading) {
-        return <div className="grid min-h-screen place-items-center bg-slate-50 font-mono text-slate-900">Loading...</div>;
+    // Loader View
+    if (isLoading) {
+        return (
+            <div className="grid min-h-screen place-items-center bg-slate-50 font-mono text-slate-900">
+                <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+                    Loading Portfolio Components...
+                </div>
+            </div>
+        );
     }
 
-    if (err) {
-        return <div className="grid min-h-screen place-items-center bg-slate-50 font-mono text-red-600">{err}</div>;
+    // Error View
+    if (errorMessage) {
+        return (
+            <div className="grid min-h-screen place-items-center bg-slate-50 font-mono text-rose-600 px-6 text-center">
+                {errorMessage}
+            </div>
+        );
     }
 
     return (
         <div className="min-h-screen text-left text-slate-950">
+            {/* Navigation Header */}
             <Header
-                links={navLink}
-                cvUrl={profile?.cvUrl && profile.cvUrl !== "/cv.pdf" ? profile.cvUrl : "/assets/CV.pdf"}
+                links={NAVIGATION_LINKS}
             />
 
+            {/* Main Content Sections */}
             <main>
                 <AboutSection
                     profile={profile}
@@ -77,10 +117,15 @@ function Portfolio() {
                 <ExperienceSection items={experience} />
                 <ProjectsSection projects={projects} />
                 <SkillsSection skills={skills} />
-                <Footer email={profile?.email} />
             </main>
+
+            {/* Footer and Contact */}
+            <Footer />
         </div>
     );
 }
 
+/*------------------------------------------------------------------------------
+                                   EXPORTS
+------------------------------------------------------------------------------*/
 export default Portfolio;

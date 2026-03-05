@@ -1,8 +1,29 @@
-function SkillCard({ skill, onDelete, onEdit }) {
+/**
+ * Description:
+ *      Miniature card component for a single technical skill.
+ *      Displays an icon (or fallback text) and the skill name.
+ */
+
+/*------------------------------------------------------------------------------
+                            MAIN COMPONENT DEFINITION
+------------------------------------------------------------------------------*/
+
+/**
+ * @brief Discrete display for a technical skill.
+ * 
+ * @param {Object} skill Skill details { name, iconUrl }.
+ * @param {Function} onDelete Removal callback.
+ * @param {Function} onEdit Edit callback.
+ * @returns {JSX.Element} The rendered skill card.
+ */
+function SkillCard({ skill }) {
+    // Local configuration
     const icon = skill.icon || skill.iconUrl || "";
 
     return (
         <div className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-white hover:shadow-md">
+
+            {/* Skill Icon or Fallback Branding */}
             {icon ? (
                 <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white">
                     <img src={icon} alt={skill.name} className="h-7 w-7 object-contain" />
@@ -13,11 +34,13 @@ function SkillCard({ skill, onDelete, onEdit }) {
                 </div>
             )}
 
+            {/* Label */}
             <span className="min-w-0 flex-1 truncate text-sm font-bold uppercase tracking-wide text-slate-700">
                 {skill.name}
             </span>
 
-            {onDelete && skill.id ? (
+            {/* Admin Controls */}
+            {/* {onDelete && skill.id ? (
                 <div className="ml-auto flex shrink-0 gap-2">
                     {onEdit && (
                         <button
@@ -36,9 +59,12 @@ function SkillCard({ skill, onDelete, onEdit }) {
                         Remove
                     </button>
                 </div>
-            ) : null}
+            ) : null} */}
         </div>
     );
 }
 
+/*------------------------------------------------------------------------------
+                                   EXPORTS
+------------------------------------------------------------------------------*/
 export default SkillCard;
