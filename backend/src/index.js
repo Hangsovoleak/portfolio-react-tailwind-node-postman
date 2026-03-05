@@ -9,9 +9,9 @@
                                    IMPORTS
 ------------------------------------------------------------------------------*/
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
-
+import express from "express";
+import cors from "cors";
 // Import Route Handlers
 const educationRouters = require('./routes/educationRoutes');
 const experienceRouters = require('./routes/experienceRoutes');
@@ -31,8 +31,15 @@ const PORT = process.env.PORT || 3000;
 /*------------------------------------------------------------------------------
                                   MIDDLEWARE
 ------------------------------------------------------------------------------*/
-// Enable Cross-Origin Resource Sharing
-app.use(cors());
+
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://69a94259de5781fc1326a9fa--voleak-portfolio.netlify.app"
+  ],
+}));
 
 // Parse incoming JSON requests
 app.use(express.json());
